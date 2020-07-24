@@ -5,9 +5,9 @@ This is a basic console COVID-19 Calculator in Python. At the moment, it takes d
 - calculates a percent change between two dates
 - calculates the infection rate for a specific day
 
-In the future, I'd like to:
-- Retrieve data directly from the Github repository
+In the future, I'd like to (in order of ease):
+- Streamline the overall process with try/excepts to catch invalid inputs 
 - Add a heatmap
 - Use mathplotlib to start plotting data points with either the user's inputs or all time
-- Streamline the overall process with try/excepts to catch invalid inputs 
+- Retrieve data directly from the Github repository
 - Create some sort of GUI
