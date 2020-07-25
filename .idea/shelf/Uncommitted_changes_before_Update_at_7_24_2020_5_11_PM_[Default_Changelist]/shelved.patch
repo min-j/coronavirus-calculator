@@ -1,0 +1,178 @@
+Index: calc.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import matplotlib.pyplot as plt\r\nfrom matplotlib import style\r\n\r\nimport pandas as pd\r\n# import pandas_datareader as web\r\ndf = pd.read_csv('data/boroughs-case-hosp-death.csv', parse_dates = True, index_col = 0)\r\n# print(df.tail(10))\r\n\r\nboros = {\r\n    'BROOKLYN': \"BK\",\r\n    'QUEENS': \"QN\",\r\n    'MANHATTAN': \"MN\",\r\n    'BRONX': \"BX\",\r\n    'STATEN ISLAND': \"SI\"\r\n}\r\n\r\ntypes = {\r\n    \"CASE COUNT\": \"_CASE_COUNT\",\r\n    \"HOSPITALIZED COUNT\": \"_HOSPITALIZED_COUNT\",\r\n    \"DEATH COUNT\": \"_DEATH_COUNT\"\r\n}\r\n\r\ndef getData(date, boro, count):\r\n    col = boros[boro] + types[count]\r\n    return df[col][date] #df col row\r\n\r\ndef dodPercentChange():\r\n    # today = main()\r\n    date1 = input(\"Choose the first (earlier) date (in YYYY-MM-DD format): \")\r\n    date2 = input(\"Choose the second(later) date (in YYYY-MM-DD format): \")\r\n    boro = input(\"What borough do you want to see? \").upper()\r\n    count = input(\"What type of data (enter case count, death count, or hospitalized count)? \").upper()\r\n    return str(((getData(date2, boro, count) - getData(date1, boro, count)) / getData(date1, boro, count)) * 100) + \"%\"\r\n\r\ndef infectionRate(num):\r\n    nycPop = 8550971\r\n    return num/nycPop * 100\r\n\r\ndef main():\r\n    print(\"Welcome to the COVD19 Calculator\")\r\n    print(\"What would you like to do?\")\r\n    print(\"1. Look at data for a specific day.\")\r\n    print(\"2. Calculate percent change between two dates.\")\r\n    print(\"3. Calcualte the infection rate for a specific day.\")\r\n    choice = input(\"Enter a number as your choice. \\n\")\r\n    if choice == \"1\": \r\n        date = input(\"\\n\" + \"Choose a date (in YYYY-MM-DD). \\n\")\r\n        boro = input(\"What borough do you want to see? \\n\").upper()\r\n        count = input(\"What type of data? Enter case count, hospitalized count, death count, or all. \\n\").upper()\r\n        if count == \"ALL\":\r\n            print(\"CASE COUNT:\" + str(getData(date, boro, \"CASE COUNT\")))\r\n            print(\"HOSPITALIZED COUNT: \" + str(getData(date, boro, \"HOSPITALIZED COUNT\")))\r\n            print(\"DEATH COUNT: \" + str(getData(date, boro, \"DEATH COUNT\")))\r\n        else: \r\n            print(count + \": \" + str(getData(date, boro, count)))\r\n    elif choice == \"2\":\r\n        print(dodPercentChange())\r\n    elif choice == \"3\":\r\n        date = input(\"\\n\" + \"Choose a date (in YYYY-MM-DD). \\n\")\r\n        cases = getData(date, \"MANHATTAN\", \"CASE COUNT\") + getData(date, \"BROOKLYN\", \"CASE COUNT\") + getData(date, \"QUEENS\", \"CASE COUNT\") + getData(date, \"BRONX\", \"CASE COUNT\") + getData(date, \"STATEN ISLAND\", \"CASE COUNT\")\r\n        rate = infectionRate(cases)\r\n        print(date + \": \" + \"TOTAL CASES: \" + str(cases) + \" Infection Rate: \" + str(round(rate,5)) + \"%.\") \r\nmain()\r\n\r\n#with the large amount of data available, there are a lot of things that can be done\r\n#we had matplotlib ready so that we could graph datapoints \r\n#try excepts to catch any incorrect inputs from the user 
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- calc.py	(revision 791b495904d2d3cc14b23ea38364b572955e9476)
++++ calc.py	(date 1595624991907)
+@@ -1,9 +1,10 @@
+ import matplotlib.pyplot as plt
+ from matplotlib import style
+-
+ import pandas as pd
+-# import pandas_datareader as web
+-df = pd.read_csv('data/boroughs-case-hosp-death.csv', parse_dates = True, index_col = 0)
++import PySimpleGUI as sg
++
++# --Initialization --
++df = pd.read_csv('data/boroughs-case-hosp-death.csv', parse_dates=True, index_col=0)
+ # print(df.tail(10))
+ 
+ boros = {
+@@ -20,10 +21,12 @@
+     "DEATH COUNT": "_DEATH_COUNT"
+ }
+ 
++
+ def getData(date, boro, count):
+     col = boros[boro] + types[count]
+-    return df[col][date] #df col row
++    return df[col][date]  # df col row
+ 
++
+ def dodPercentChange():
+     # today = main()
+     date1 = input("Choose the first (earlier) date (in YYYY-MM-DD format): ")
+@@ -32,18 +35,20 @@
+     count = input("What type of data (enter case count, death count, or hospitalized count)? ").upper()
+     return str(((getData(date2, boro, count) - getData(date1, boro, count)) / getData(date1, boro, count)) * 100) + "%"
+ 
++
+ def infectionRate(num):
+     nycPop = 8550971
+-    return num/nycPop * 100
++    return num / nycPop * 100
+ 
++
+ def main():
+     print("Welcome to the COVD19 Calculator")
+     print("What would you like to do?")
+     print("1. Look at data for a specific day.")
+     print("2. Calculate percent change between two dates.")
+-    print("3. Calcualte the infection rate for a specific day.")
++    print("3. Calculate the infection rate for a specific day.")
+     choice = input("Enter a number as your choice. \n")
+-    if choice == "1": 
++    if choice == "1":
+         date = input("\n" + "Choose a date (in YYYY-MM-DD). \n")
+         boro = input("What borough do you want to see? \n").upper()
+         count = input("What type of data? Enter case count, hospitalized count, death count, or all. \n").upper()
+@@ -51,17 +56,33 @@
+             print("CASE COUNT:" + str(getData(date, boro, "CASE COUNT")))
+             print("HOSPITALIZED COUNT: " + str(getData(date, boro, "HOSPITALIZED COUNT")))
+             print("DEATH COUNT: " + str(getData(date, boro, "DEATH COUNT")))
+-        else: 
++        else:
+             print(count + ": " + str(getData(date, boro, count)))
+     elif choice == "2":
+         print(dodPercentChange())
+     elif choice == "3":
+         date = input("\n" + "Choose a date (in YYYY-MM-DD). \n")
+-        cases = getData(date, "MANHATTAN", "CASE COUNT") + getData(date, "BROOKLYN", "CASE COUNT") + getData(date, "QUEENS", "CASE COUNT") + getData(date, "BRONX", "CASE COUNT") + getData(date, "STATEN ISLAND", "CASE COUNT")
++        cases = getData(date, "MANHATTAN", "CASE COUNT") + getData(date, "BROOKLYN", "CASE COUNT") + \
++                getData(date, "QUEENS", "CASE COUNT") + getData(date, "BRONX", "CASE COUNT") + \
++                getData(date, "STATEN ISLAND", "CASE COUNT")
+         rate = infectionRate(cases)
+-        print(date + ": " + "TOTAL CASES: " + str(cases) + " Infection Rate: " + str(round(rate,5)) + "%.") 
+-main()
++        print(date + ": " + "TOTAL CASES: " + str(cases) + " Infection Rate: " + str(round(rate, 5)) + "%.")
++
+ 
+-#with the large amount of data available, there are a lot of things that can be done
+-#we had matplotlib ready so that we could graph datapoints 
+-#try excepts to catch any incorrect inputs from the user 
+\ No newline at end of file
++def run():
++    # sg.theme('Dark Blue 3')  # please make your creations colorful
++    one = "Look at data for a specific day"
++    two = "Calculate percent change between two dates."
++    three = "Calculate the infection rate for a specific day."
++    layout = [[sg.Text('Welcome to the Coronavirus Calculator')],
++              [sg.Button(one)],
++              [sg.Button(two)],
++               [sg.Button(three)]]
++    window = sg.Window('Coronavirus Calculator', layout)
++    while True:
++        event, values = window.read()
++        if event == "OK" or event == sg.WIN_CLOSED:
++            break
++    window.close()
++
++main()
+\ No newline at end of file
+Index: .idea/.gitignore
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/.gitignore	(date 1595548793576)
++++ .idea/.gitignore	(date 1595548793576)
+@@ -0,0 +1,2 @@
++# Default ignored files
++/workspace.xml
+Index: .idea/modules.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/modules.xml	(date 1595548793173)
++++ .idea/modules.xml	(date 1595548793173)
+@@ -0,0 +1,8 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="ProjectModuleManager">
++    <modules>
++      <module fileurl="file://$PROJECT_DIR$/.idea/coronavirus-calculator.iml" filepath="$PROJECT_DIR$/.idea/coronavirus-calculator.iml" />
++    </modules>
++  </component>
++</project>
+\ No newline at end of file
+Index: .idea/vcs.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/vcs.xml	(date 1595548793163)
++++ .idea/vcs.xml	(date 1595548793163)
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="VcsDirectoryMappings">
++    <mapping directory="$PROJECT_DIR$" vcs="Git" />
++  </component>
++</project>
+\ No newline at end of file
+Index: .idea/coronavirus-calculator.iml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/coronavirus-calculator.iml	(date 1595549136373)
++++ .idea/coronavirus-calculator.iml	(date 1595549136373)
+@@ -0,0 +1,8 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<module type="PYTHON_MODULE" version="4">
++  <component name="NewModuleRootManager">
++    <content url="file://$MODULE_DIR$" />
++    <orderEntry type="jdk" jdkName="Python 3.7" jdkType="Python SDK" />
++    <orderEntry type="sourceFolder" forTests="false" />
++  </component>
++</module>
+\ No newline at end of file
+Index: .idea/inspectionProfiles/profiles_settings.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/inspectionProfiles/profiles_settings.xml	(date 1595548793190)
++++ .idea/inspectionProfiles/profiles_settings.xml	(date 1595548793190)
+@@ -0,0 +1,6 @@
++<component name="InspectionProjectProfileManager">
++  <settings>
++    <option name="USE_PROJECT_PROFILE" value="false" />
++    <version value="1.0" />
++  </settings>
++</component>
+\ No newline at end of file
