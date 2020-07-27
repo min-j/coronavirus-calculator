@@ -21,6 +21,17 @@ types = {
     "DEATH COUNT": "_DEATH_COUNT"
 }
 
+monthToNum = {
+    "January": "01", "February": "02", "March": "03", "April": "04",
+    "May": "05", "June": "06", "July": "07", "August": "08",
+    "September": "09", "October": "10", "November": "11", "December": "12"
+}
+
+months = ["January", "February", "March", "April",
+          "May", "June", "July", "August",
+          "September", "October", "November", "December"]
+boroughs = ["Brooklyn", "Queens", "Manhattan", "Bronx", "Staten Island"]
+
 
 def getData(date, boro, count):
     col = boros[boro] + types[count]
@@ -47,20 +58,34 @@ def infectionRate(num):
     return num / nycPop * 100
 
 
-def showGraph(boro, count):
+# maybe plot all lines for proper comparison
+def showGraph(count):
     register_matplotlib_converters()
     dates = pd.date_range(start="2020-02-29", end="2020-07-07")
-    countList = []
+    countM = []
+    countBK = []
+    countQ = []
+    countBX = []
+    countSI = []
+    countTotal = []
     for i in dates:
-        if boro == "ALL":
-            countList.append(getTotal(i, count))
-        else:
-            countList.append(getData(i, boro, count))
-    plt.plot(dates, countList)
+        countM.append(getData(i, "MANHATTAN", count))
+        countBK.append(getData(i, "BROOKLYN", count))
+        countQ.append(getData(i, "QUEENS", count))
+        countBX.append(getData(i, "BRONX", count))
+        countSI.append(getData(i, "STATEN ISLAND", count))
+        countTotal.append(getTotal(i, count))
+    plt.plot(dates, countM, label="Manhattan")
+    plt.plot(dates, countBK, label="Brooklyn")
+    plt.plot(dates, countQ, label="Queens")
+    plt.plot(dates, countBX, label="Bronx")
+    plt.plot(dates, countSI, label="Staten Island")
+    # plt.plot(dates, countTotal, label="Total")
     plt.ylabel('COUNT')
     plt.xlabel('DATE')
     plt.xticks(rotation=30)
-    plt.title(boro + " " + count)
+    plt.title(count)
+    plt.legend()
     plt.show()
 
 
@@ -72,6 +97,7 @@ def main():
     print("2. Calculate percent change between two dates.")
     print("3. Calculate the infection rate for a specific day.")
     print("4. Plot a graph.")
+    # This 'catching
     while True:
         try:
             choice = int(input("Enter a number as your choice. \n"))
@@ -97,32 +123,73 @@ def main():
         rate = infectionRate(cases)
         print(date + ": " + "TOTAL CASES: " + str(cases) + " Infection Rate: " + str(round(rate, 5)) + "%.")
     elif choice == 4:
-        boro = input("What borough do you want to see? Type all for total data. \n").upper()
+        # the user should choose bc everything together is quite cluttered
+        # perhaps in the GUI, offer the user a choice to view how many boroughs they want + the total
         count = input("What type of data? Enter case count, hospitalized count, or death count \n").upper()
-        showGraph(boro, count)
+        showGraph(count)
         print("DISPLAYING GRAPH")
 
 
-# testing PySimpleGui
-# drop downs exist
+# have to take invalid user inputs
 def run():
     # sg.theme('Dark Blue 3')  # please make your creations colorful
     one = "Look at data for a specific day"
     two = "Calculate percent change between two dates."
     three = "Calculate the infection rate for a specific day."
+    four = "Plot a graph."
     layout = [[sg.Text('Welcome to the Coronavirus Calculator')],
               [sg.Button(one)],
               [sg.Button(two)],
               [sg.Button(three)],
+              [sg.Button(four)],
               ]
-    window = sg.Window('Coronavirus Calculator', layout)
+    mainWindow = sg.Window('Coronavirus Calculator', layout)  # size=(500, 500)
+    mainActive = False
     while True:
-        event, values = window.read()
-        if event == "OK" or event == sg.WIN_CLOSED:
+        event, values = mainWindow.read()
+        if event == sg.WIN_CLOSED:
             break
-    window.close()
+        elif event == one:
+            mainWindow.Hide()
+            # may have to take invalid inputs or bypass this by putting in more combos
+            layout = [[sg.Text('Choose a date:')],
+                      [sg.Combo(months, key='MM', default_value='February'), sg.InputText('DAY', key='DD', size=(4, 1)),
+                       sg.InputText('YEAR', key='YYYY', size=(6, 1))],
+                      [sg.Text('Choose a borough:')],
+                      [sg.Combo(boroughs)],
+                      [sg.Text("What type of data?")],
+                      [sg.Button("Case Count"), sg.Button("Hospitalized Count"), sg.Button("Death Count"),
+                       sg.Button("All")],
+                      [sg.Text(key="title", size=(30, 1))],
+                      [sg.Text(key="data", size=(30, 3))]]
+            window = sg.Window('Data for a specific day', layout)
+            while True:
+                event, values = window.read()
+                if event == sg.WIN_CLOSED:
+                    window.Close()
+                    mainWindow.UnHide()
+                    break
+                date = values['YYYY'] + "-" + monthToNum[values['MM']] + "-" + values['DD']
+                boro = values[0].upper()
+                if event == "Case Count":
+                    window['title'].update(values[0] + " " + event)
+                    window['data'].update(event.upper() + ": " + str(getData(date, boro, event.upper())))
+                elif event == "Hospitalized Count":
+                    window['title'].update(values[0] + " " + event)
+                    window['data'].update(event.upper() + ": " + str(getData(date, boro, event.upper())))
+                elif event == "Death Count":
+                    window['title'].update(values[0] + " " + event)
+                    window['data'].update(event.upper() + ": " + str(getData(date, boro, event.upper())))
+                elif event == "All":
+                    case = "CASE COUNT: " + str(getData(date, boro, "CASE COUNT"))
+                    hospitalized = "HOSPITALIZED COUNT: " + str(getData(date, boro, "HOSPITALIZED COUNT"))
+                    death = "DEATH COUNT: " + str(getData(date, boro, "DEATH COUNT"))
+                    window['title'].update(values[0] + " All Counts")
+                    window['data'].update(case + "\n" + hospitalized + "\n" + death)
+    mainWindow.close()
 
 
 # Running Methods
-main()
+# main()
 # showGraph("CASE COUNT")
+run()
