@@ -4,7 +4,7 @@ import PySimpleGUI as sg
 from pandas.plotting import register_matplotlib_converters
 
 # --Initialization --
-df = pd.read_csv('data/boroughs-case-hosp-death.csv', parse_dates=True, index_col=0)
+df = pd.read_csv('coronavirus-data/boro/boroughs-case-hosp-death.csv', parse_dates=True, index_col=0)
 
 boros = {
     'BROOKLYN': "BK",
