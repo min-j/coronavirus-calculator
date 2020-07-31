@@ -7,4 +7,4 @@ This is a basic console COVID-19 Calculator in Python. At the moment, it takes a
 - plots a graph of of any count
 
 # Roadmap
-- Retrieve data directly from the Github repository
+- Creating an .exe file
