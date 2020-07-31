@@ -30,32 +30,35 @@ monthToNum = {
 months = ["January", "February", "March", "April",
           "May", "June", "July", "August",
           "September", "October", "November", "December"]
-boroughs = ["Brooklyn", "Queens", "Manhattan", "Bronx", "Staten Island"]
+boroughs = ["Brooklyn", "Queens", "Manhattan", "Bronx", "Staten Island", "The City"]
 
 
 def getData(date, boro, count):
+    if boro == "THE CITY":
+        return getData(date, "MANHATTAN", count) + getData(date, "BROOKLYN", count) + \
+               getData(date, "QUEENS", count) + getData(date, "BRONX", count) + \
+               getData(date, "STATEN ISLAND", count)
     col = boros[boro] + types[count]
     return df[col][date]  # df col row
 
 
-def getTotal(date, count):
-    return getData(date, "MANHATTAN", count) + getData(date, "BROOKLYN", count) + \
-           getData(date, "QUEENS", count) + getData(date, "BRONX", count) + \
-           getData(date, "STATEN ISLAND", count)
-
-
-def dodPercentChange():
-    # today = main()
-    date1 = input("Choose the first (earlier) date (in YYYY-MM-DD format): ")
-    date2 = input("Choose the second(later) date (in YYYY-MM-DD format): ")
-    boro = input("What borough do you want to see? ").upper()
-    count = input("What type of data (enter case count, death count, or hospitalized count)? ").upper()
-    return str(((getData(date2, boro, count) - getData(date1, boro, count)) / getData(date1, boro, count)) * 100) + "%"
+def dodPercentChange(date1, date2, boro, count):
+    return str(round((((getData(date2, boro, count) - getData(date1, boro, count)) / getData(date1, boro, count))), 2) * 100) + "%"
 
 
 def infectionRate(num):
     nycPop = 8550971
     return num / nycPop * 100
+
+
+def checkDate(m, d, y):
+    if m not in months:
+        return True
+    elif d == 'DAY' or d == '':
+        return True
+    elif y == 'YEAR' or y == '':
+        return True
+    return False
 
 
 # maybe plot all lines for proper comparison
@@ -74,7 +77,7 @@ def showGraph(count):
         countQ.append(getData(i, "QUEENS", count))
         countBX.append(getData(i, "BRONX", count))
         countSI.append(getData(i, "STATEN ISLAND", count))
-        countTotal.append(getTotal(i, count))
+        countTotal.append(getData(i, "THE CITY", count))
     plt.plot(dates, countM, label="Manhattan")
     plt.plot(dates, countBK, label="Brooklyn")
     plt.plot(dates, countQ, label="Queens")
@@ -119,7 +122,7 @@ def main():
         print(dodPercentChange())
     elif choice == 3:
         date = input("\n" + "Choose a date (in YYYY-MM-DD). \n")
-        cases = getTotal(date, "CASE COUNT")
+        cases = getData(date, "THE CITY", "CASE COUNT")
         rate = infectionRate(cases)
         print(date + ": " + "TOTAL CASES: " + str(cases) + " Infection Rate: " + str(round(rate, 5)) + "%.")
     elif choice == 4:
@@ -144,7 +147,6 @@ def run():
               [sg.Button(four)],
               ]
     mainWindow = sg.Window('Coronavirus Calculator', layout)  # size=(500, 500)
-    mainActive = False
     while True:
         event, values = mainWindow.read()
         if event == sg.WIN_CLOSED:
@@ -157,9 +159,7 @@ def run():
                        sg.InputText('YEAR', key='YYYY', size=(6, 1))],
                       [sg.Text('Choose a borough:')],
                       [sg.Combo(boroughs)],
-                      [sg.Text("What type of data?")],
-                      [sg.Button("Case Count"), sg.Button("Hospitalized Count"), sg.Button("Death Count"),
-                       sg.Button("All")],
+                      [sg.Button("Submit")],
                       [sg.Text(key="title", size=(30, 1))],
                       [sg.Text(key="data", size=(30, 3))]]
             window = sg.Window('Data for a specific day', layout)
@@ -169,23 +169,54 @@ def run():
                     window.Close()
                     mainWindow.UnHide()
                     break
-                date = values['YYYY'] + "-" + monthToNum[values['MM']] + "-" + values['DD']
-                boro = values[0].upper()
-                if event == "Case Count":
-                    window['title'].update(values[0] + " " + event)
-                    window['data'].update(event.upper() + ": " + str(getData(date, boro, event.upper())))
-                elif event == "Hospitalized Count":
-                    window['title'].update(values[0] + " " + event)
-                    window['data'].update(event.upper() + ": " + str(getData(date, boro, event.upper())))
-                elif event == "Death Count":
-                    window['title'].update(values[0] + " " + event)
-                    window['data'].update(event.upper() + ": " + str(getData(date, boro, event.upper())))
-                elif event == "All":
-                    case = "CASE COUNT: " + str(getData(date, boro, "CASE COUNT"))
-                    hospitalized = "HOSPITALIZED COUNT: " + str(getData(date, boro, "HOSPITALIZED COUNT"))
-                    death = "DEATH COUNT: " + str(getData(date, boro, "DEATH COUNT"))
-                    window['title'].update(values[0] + " All Counts")
-                    window['data'].update(case + "\n" + hospitalized + "\n" + death)
+                if event == "Submit":
+                    if checkDate(values['MM'], values['DD'], values['YYYY']):
+                        window['data'].update('Please enter a valid date.')
+                    elif values[0] not in boroughs:
+                        window['data'].update('Please enter a valid borough.')
+                    else:
+                        date = values['YYYY'] + "-" + monthToNum[values['MM']] + "-" + values['DD']
+                        boro = values[0].upper()
+                        case = "CASE COUNT: " + str(getData(date, boro, "CASE COUNT"))
+                        hospitalized = "HOSPITALIZED COUNT: " + str(getData(date, boro, "HOSPITALIZED COUNT"))
+                        death = "DEATH COUNT: " + str(getData(date, boro, "DEATH COUNT"))
+                        window['title'].update("All Counts for " + values[0])
+                        window['data'].update(case + "\n" + hospitalized + "\n" + death)
+        elif event == two:
+            mainWindow.Hide()
+            layout = [[sg.Text('Choose a date:')],
+                      [sg.Combo(months, key='MM1'), sg.InputText('DAY', key='DD1', size=(4, 1)),
+                       sg.InputText('YEAR', key='YYYY1', size=(6, 1))],
+                      [sg.Text('Choose another date:')],
+                      [sg.Combo(months, key='MM2'), sg.InputText('DAY', key='DD2', size=(4, 1)),
+                       sg.InputText('YEAR', key='YYYY2', size=(6, 1))],
+                      [sg.Text('Choose a borough:')],
+                      [sg.Combo(boroughs)],
+                      [sg.Button("Submit")],
+                      [sg.Text(key="title", size=(30, 1))],
+                      [sg.Text(key="data", size=(30, 3))]]
+            window = sg.Window('Percent Change Between Two Dates', layout)
+            while True:
+                event, values = window.read()
+                if event == sg.WIN_CLOSED:
+                    window.Close()
+                    mainWindow.UnHide()
+                    break
+                if event == "Submit":
+                    if checkDate(values['MM1'], values['DD1'], values['YYYY1']):
+                        window['data'].update('Please enter a valid first date.')
+                    elif checkDate(values['MM2'], values['DD2'], values['YYYY2']):
+                        window['data'].update('Please enter a valid second date.')
+                    elif values[0] not in boroughs:
+                        window['data'].update('Please enter a valid borough.')
+                    date1 = values['YYYY1'] + "-" + monthToNum[values['MM1']] + "-" + values['DD1']
+                    date2 = values['YYYY2'] + "-" + monthToNum[values['MM2']] + "-" + values['DD2']
+                    boro = values[0].upper()
+                    caseChange = "CASE COUNT: " + dodPercentChange(date1, date2, boro, "CASE COUNT")
+                    hospitalizedChange = "HOSPITALIZED COUNT: " + dodPercentChange(date1, date2, boro, "HOSPITALIZED COUNT")
+                    deathChange = "DEATH COUNT: " + dodPercentChange(date1, date2, boro, "DEATH COUNT")
+                    window['title'].update("Percent Change in " + values[0])
+                    window['data'].update(caseChange + "\n" + hospitalizedChange + "\n" + deathChange)
     mainWindow.close()
 
 
