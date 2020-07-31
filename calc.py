@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-# import numpy as np
 import pandas as pd
 import PySimpleGUI as sg
 from pandas.plotting import register_matplotlib_converters
@@ -43,7 +42,7 @@ def getData(date, boro, count):
 
 
 def dodPercentChange(date1, date2, boro, count):
-    return str(round((((getData(date2, boro, count) - getData(date1, boro, count)) / getData(date1, boro, count))), 2) * 100) + "%"
+    return str(round(((getData(date2, boro, count) - getData(date1, boro, count)) / getData(date1, boro, count)) * 100, 2)) + "%"
 
 
 def infectionRate(num):
@@ -61,8 +60,7 @@ def checkDate(m, d, y):
     return False
 
 
-# maybe plot all lines for proper comparison
-def showGraph(count):
+def showGraph(boro, count):
     register_matplotlib_converters()
     dates = pd.date_range(start="2020-02-29", end="2020-07-07")
     countM = []
@@ -70,28 +68,35 @@ def showGraph(count):
     countQ = []
     countBX = []
     countSI = []
-    countTotal = []
+    countCity = []
     for i in dates:
-        countM.append(getData(i, "MANHATTAN", count))
-        countBK.append(getData(i, "BROOKLYN", count))
-        countQ.append(getData(i, "QUEENS", count))
-        countBX.append(getData(i, "BRONX", count))
-        countSI.append(getData(i, "STATEN ISLAND", count))
-        countTotal.append(getData(i, "THE CITY", count))
-    plt.plot(dates, countM, label="Manhattan")
-    plt.plot(dates, countBK, label="Brooklyn")
-    plt.plot(dates, countQ, label="Queens")
-    plt.plot(dates, countBX, label="Bronx")
-    plt.plot(dates, countSI, label="Staten Island")
-    # plt.plot(dates, countTotal, label="Total")
+        countM.append(getData(i, "MANHATTAN", count.upper()))
+        countBK.append(getData(i, "BROOKLYN", count.upper()))
+        countQ.append(getData(i, "QUEENS", count.upper()))
+        countBX.append(getData(i, "BRONX", count.upper()))
+        countSI.append(getData(i, "STATEN ISLAND", count.upper()))
+        countCity.append(getData(i, "THE CITY", count.upper()))
+    if boro[0]:
+        plt.plot(dates, countBK, label="Brooklyn")
+    if boro[1]:
+        plt.plot(dates, countQ, label="Queens")
+    if boro[2]:
+        plt.plot(dates, countM, label="Manhattan")
+    if boro[3]:
+        plt.plot(dates, countBX, label="Bronx")
+    if boro[4]:
+        plt.plot(dates, countSI, label="Staten Island")
+    if boro[5]:
+        plt.plot(dates, countCity, label="The City")
     plt.ylabel('COUNT')
     plt.xlabel('DATE')
     plt.xticks(rotation=30)
     plt.title(count)
     plt.legend()
-    plt.show()
+    plt.show(block=False)
 
 
+# Command Line
 def main():
     choice = ""
     print("Welcome to the COVID-19 Calculator")
@@ -100,7 +105,6 @@ def main():
     print("2. Calculate percent change between two dates.")
     print("3. Calculate the infection rate for a specific day.")
     print("4. Plot a graph.")
-    # This 'catching
     while True:
         try:
             choice = int(input("Enter a number as your choice. \n"))
@@ -119,7 +123,11 @@ def main():
         else:
             print(count + ": " + str(getData(date, boro, count)))
     elif choice == 2:
-        print(dodPercentChange())
+        date1 = input("\n" + "Choose a date (in YYYY-MM-DD). \n")
+        date2 = input("\n" + "Choose another date (in YYYY-MM-DD). \n")
+        boro = input("What borough do you want to see? \n").upper()
+        count = input("What type of data? Enter case count, hospitalized count, death count, or all. \n").upper()
+        print(dodPercentChange(date1, date2, boro, count))
     elif choice == 3:
         date = input("\n" + "Choose a date (in YYYY-MM-DD). \n")
         cases = getData(date, "THE CITY", "CASE COUNT")
@@ -133,9 +141,10 @@ def main():
         print("DISPLAYING GRAPH")
 
 
-# have to take invalid user inputs
+# GUI
 def run():
     # sg.theme('Dark Blue 3')  # please make your creations colorful
+    sg.ChangeLookAndFeel('Reddit')
     one = "Look at data for a specific day"
     two = "Calculate percent change between two dates."
     three = "Calculate the infection rate for a specific day."
@@ -146,7 +155,7 @@ def run():
               [sg.Button(three)],
               [sg.Button(four)],
               ]
-    mainWindow = sg.Window('Coronavirus Calculator', layout)  # size=(500, 500)
+    mainWindow = sg.Window('Coronavirus Calculator', layout, size=(500, 250), element_justification='c')
     while True:
         event, values = mainWindow.read()
         if event == sg.WIN_CLOSED:
@@ -155,14 +164,14 @@ def run():
             mainWindow.Hide()
             # may have to take invalid inputs or bypass this by putting in more combos
             layout = [[sg.Text('Choose a date:')],
-                      [sg.Combo(months, key='MM', default_value='February'), sg.InputText('DAY', key='DD', size=(4, 1)),
+                      [sg.Combo(months, key='MM'), sg.InputText('DAY', key='DD', size=(4, 1)),
                        sg.InputText('YEAR', key='YYYY', size=(6, 1))],
                       [sg.Text('Choose a borough:')],
                       [sg.Combo(boroughs)],
                       [sg.Button("Submit")],
                       [sg.Text(key="title", size=(30, 1))],
                       [sg.Text(key="data", size=(30, 3))]]
-            window = sg.Window('Data for a specific day', layout)
+            window = sg.Window('Data for a Specific Day', layout, size=(500, 250), element_justification='c')
             while True:
                 event, values = window.read()
                 if event == sg.WIN_CLOSED:
@@ -195,7 +204,7 @@ def run():
                       [sg.Button("Submit")],
                       [sg.Text(key="title", size=(30, 1))],
                       [sg.Text(key="data", size=(30, 3))]]
-            window = sg.Window('Percent Change Between Two Dates', layout)
+            window = sg.Window('Percent Change Between Two Dates', layout, size=(500, 250), element_justification='c')
             while True:
                 event, values = window.read()
                 if event == sg.WIN_CLOSED:
@@ -209,14 +218,59 @@ def run():
                         window['data'].update('Please enter a valid second date.')
                     elif values[0] not in boroughs:
                         window['data'].update('Please enter a valid borough.')
-                    date1 = values['YYYY1'] + "-" + monthToNum[values['MM1']] + "-" + values['DD1']
-                    date2 = values['YYYY2'] + "-" + monthToNum[values['MM2']] + "-" + values['DD2']
-                    boro = values[0].upper()
-                    caseChange = "CASE COUNT: " + dodPercentChange(date1, date2, boro, "CASE COUNT")
-                    hospitalizedChange = "HOSPITALIZED COUNT: " + dodPercentChange(date1, date2, boro, "HOSPITALIZED COUNT")
-                    deathChange = "DEATH COUNT: " + dodPercentChange(date1, date2, boro, "DEATH COUNT")
-                    window['title'].update("Percent Change in " + values[0])
-                    window['data'].update(caseChange + "\n" + hospitalizedChange + "\n" + deathChange)
+                    else:
+                        date1 = values['YYYY1'] + "-" + monthToNum[values['MM1']] + "-" + values['DD1']
+                        date2 = values['YYYY2'] + "-" + monthToNum[values['MM2']] + "-" + values['DD2']
+                        boro = values[0].upper()
+                        caseChange = "CASE COUNT: " + dodPercentChange(date1, date2, boro, "CASE COUNT")
+                        hospitalizedChange = "HOSPITALIZED COUNT: " + \
+                                             dodPercentChange(date1, date2, boro, "HOSPITALIZED COUNT")
+                        deathChange = "DEATH COUNT: " + dodPercentChange(date1, date2, boro, "DEATH COUNT")
+                        window['title'].update("Percent Change in " + values[0])
+                        window['data'].update(caseChange + "\n" + hospitalizedChange + "\n" + deathChange)
+        elif event == three:
+            mainWindow.Hide()
+            layout = [[sg.Text('Choose a date:')],
+                      [sg.Combo(months, key='MM'), sg.InputText('DAY', key='DD', size=(4, 1)),
+                       sg.InputText('YEAR', key='YYYY', size=(6, 1))],
+                      [sg.Button("Submit")],
+                      [sg.Text(key="title", size=(30, 1))],
+                      [sg.Text(key="data", size=(30, 1))]]
+            window = sg.Window('Infection Rate for a Specific Day', layout, size=(500, 250), element_justification='c')
+            while True:
+                event, values = window.read()
+                if event == sg.WIN_CLOSED:
+                    window.Close()
+                    mainWindow.UnHide()
+                    break
+                if event == "Submit":
+                    if checkDate(values['MM'], values['DD'], values['YYYY']):
+                        window['data'].update('Please enter a valid date.')
+                    else:
+                        date = values['YYYY'] + "-" + monthToNum[values['MM']] + "-" + values['DD']
+                        window['title'].update("Infection Rate on " + date)
+                        window['data'].update(infectionRate(getData(date, "THE CITY", "CASE COUNT")))
+        elif event == four:
+            mainWindow.Hide()
+            layout = [[sg.Text("Choose borough(s):")],
+                      [sg.Checkbox(boroughs[0]), sg.Checkbox(boroughs[1]), sg.Checkbox(boroughs[2]),
+                       sg.Checkbox(boroughs[3]), sg.Checkbox(boroughs[4])],
+                      [sg.Checkbox(boroughs[5])],
+                      [sg.Text("Choose a count:")],
+                      [sg.Button("Case Count"), sg.Button("Hospitalized Count"), sg.Button("Death Count")]]
+            window = sg.Window('Plot A Graph', layout, size=(500, 250), element_justification='c')
+            while True:
+                event, values = window.read()
+                if event == sg.WIN_CLOSED:
+                    window.Close()
+                    mainWindow.UnHide()
+                    break
+                if event == 'Case Count':
+                    showGraph(values, event)
+                if event == 'Hospitalized Count':
+                    showGraph(values, event)
+                if event == 'Death Count':
+                    showGraph(values, event)
     mainWindow.close()
 
 
