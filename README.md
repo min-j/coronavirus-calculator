@@ -6,5 +6,5 @@ This is a basic COVID-19 Calculator in Python. It takes a snippet of data from t
 - calculates the infection rate for a specific day
 - plots a graph of of any count
 
-# Roadmap
-- Creating an .exe file
+# Creating an .exe file
+I was able to create an exe file to run on Windows but I cannot upload the file due to its size.
